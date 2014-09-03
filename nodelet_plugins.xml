@@ -1,0 +1,14 @@
+<library path="lib/libflir_gige">
+    <class name="flir_gige/FlirNodelet" type="flir_gige::FlirNodelet"
+        base_class_type="nodelet::Nodelet">
+        <description>
+            This is a nodelet for the Flir thermal camera
+        </description>
+    </class>
+    <class name="flir_gige/ThermalProcNodelet" type="flir_gige::ThermalProcNodelet"
+        base_class_type="nodelet::Nodelet">
+        <description>
+            This is a nodelet for the thermal image processing
+        </description>
+    </class>
+</library>
