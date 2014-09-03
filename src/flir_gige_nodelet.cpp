@@ -8,7 +8,11 @@ namespace flir_gige {
 class FlirNodelet : public nodelet::Nodelet {
  public:
   FlirNodelet() : nodelet::Nodelet() {}
-  ~FlirNodelet() { flir_gige_node_->End(); }
+  ~FlirNodelet() {
+    if (flir_gige_node_) {
+      flir_gige_node_->End();
+    }
+  }
 
   virtual void onInit() {
     try {
