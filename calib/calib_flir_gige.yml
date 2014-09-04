@@ -1,6 +1,6 @@
 image_width: 320
 image_height: 256
-camera_name: flir_a5
+camera_name: flir_gige
 camera_matrix:
   rows: 3
   cols: 3

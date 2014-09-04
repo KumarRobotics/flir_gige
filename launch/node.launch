@@ -1,12 +1,12 @@
 <launch>
     <!-- Camera Settings -->
-    <arg name="ip_address" default="192.168.0.11"/>
+    <arg name="ip_address" default="192.168.1.11"/>
     <arg name="frame_id" default="flir_gige"/>
     <arg name="camera" default="flir_gige"/>
     <arg name="calib_url"
         default="package://flir_gige/calib/calib_$(arg camera).yml"/>
     <arg name="fps" default="20.0"/>
-    <arg name="bit" default="2"/>
+    <arg name="raw" default="false"/>
 
     <!-- Node Settings -->
     <arg name="output" default="screen"/>
@@ -17,18 +17,18 @@
 
     <!-- Node -->
     <node pkg="flir_gige" type="flir_gige_node" name="$(arg camera)"
-        respawn="$(arg respawn)" output="$(arg screen)">
+        respawn="$(arg respawn)" output="$(arg output)">
         <param name="identifier" type="string" value="$(arg ip_address)"/>
         <param name="frame_id" type="string" value="$(arg frame_id)"/>
         <param name="camera" type="string" value="$(arg camera)"/>
         <param name="calib_url" type="string" value="$(arg calib_url)"/>
         <param name="fps" type="double" value="$(arg fps)"/>
-        <param name="bit" type="int" value="$(arg bit)"/>
+        <param name="raw" type="bool" value="$(arg raw)"/>
     </node>
 
     <!-- Thermal Proc -->
     <node if="$(arg proc)" pkg="flir_gige" type="thermal_proc_node"
-        name="thermal_proc" ns="$(arg camera)" output="$(arg screen)">
+        name="thermal_proc" ns="$(arg camera)" output="$(arg output)">
     </node>
 
     <!-- View -->
