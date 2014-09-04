@@ -1,4 +1,4 @@
-#include "flir_gige/flir_gige.h"
+#include "flir_gige/flir_gige_node.h"
 
 #include <memory>
 #include <functional>
@@ -11,9 +11,6 @@
 #include <sensor_msgs/image_encodings.h>
 #include <sensor_msgs/Temperature.h>
 #include <dynamic_reconfigure/server.h>
-#include <cv_bridge/cv_bridge.h>
-
-#include <opencv2/core/core.hpp>
 
 #include "flir_gige/gige_camera.h"
 
@@ -48,7 +45,7 @@ FlirGige::FlirGige(const ros::NodeHandle &nh)
   // Create a camera
   std::string ip_address;
   nh_.param<std::string>("ip_address", ip_address, std::string(""));
-  gige_camera_.reset(new GigeCamera(ip_address));
+  gige_camera_.reset(new FlirGige(ip_address));
   gige_camera_->use_image =
       std::bind(&FlirGige::PublishImage, this, std::placeholders::_1,
                 std::placeholders::_2);

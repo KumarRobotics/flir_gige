@@ -1,94 +1,72 @@
-#include "flir_gige/gige_camera.h"
+#include "flir_gige/flir_gige.h"
 
-#include <cmath>
-#include <unistd.h>
-
-#include <iostream>
-#include <stdexcept>
-#include <sstream>
-#include <vector>
 #include <algorithm>
 
-#include <opencv2/core/core.hpp>
-#include <opencv2/imgproc/imgproc.hpp>
-#include <opencv2/highgui/highgui.hpp>
-#include <opencv2/contrib/contrib.hpp>
+#include <ros/ros.h>
 
 #include <PvGenParameterArray.h>
 #include <PvGenParameter.h>
 
 namespace flir_gige {
 
-GigeCamera::GigeCamera(const std::string &ip_address) {
+FlirGige::FlirGige(const std::string &ip_address)
+    : ip_address{ip_address}, dinfo_{nullptr} {
   // Find all devices on the network
-  PvResult result = system_.Find();
+  const PvResult result = system_.Find();
   if (!result.IsOK()) {
-    std::ostringstream error_msg;
-    error_msg << "PvSystem::Find Error: " << result.GetCodeString().GetAscii();
-    throw std::runtime_error(error_msg.str());
+    throw std::runtime_error(std::string("PvSystem::Find Error: ") +
+                             result.GetCodeString().GetAscii());
   }
   FindDevice(ip_address);
 }
 
-void GigeCamera::Connect() {
+void FlirGige::Connect() {
   ConnectDevice();
   OpenStream();
   ConfigureStream();
   CreatePipeline();
 }
 
-void GigeCamera::Disconnect() {
+void FlirGige::Disconnect() {
   // Release all the recourses we hold
   pipeline_.reset();
   stream_.reset();
   device_.reset();
 }
 
-void GigeCamera::Configure(const GigeConfig &config) {
-  color_ = config.color;
-  SetPixelFormat(static_cast<BitSize>(config.bit));
-  //  SetAoi(config.width, config.height);
+void FlirGige::Configure(FlirGigeDynConfig &config) {
+  SetPixelFormat(config.raw);
 }
 
-void GigeCamera::Start() {
+void FlirGige::Start() {
   StartAcquisition();
   // Set acquire to true
-  acquire_ = true;
-  // Creat a new thread for acquisition
-  image_thread_.reset(new std::thread(&GigeCamera::AcquireImages, this));
 }
 
-void GigeCamera::Stop() {
-  // Set acquire to false to stop the thread
-  acquire_ = false;
-  // Wait for the thread to finish
-  image_thread_->join();
-  StopAcquisition();
-}
+void FlirGige::Stop() { StopAcquisition(); }
 
-void GigeCamera::FindDevice(const std::string &ip) {
-  auto interface_count = system_.GetInterfaceCount();
-  std::cout << label_ << "Interface count: " << interface_count << std::endl;
+void FlirGige::FindDevice(const std::string &ip) {
+  const auto interface_cnt = system_.GetInterfaceCount();
+  ROS_INFO_STREAM("Interface count:" << interface_cnt);
 
   // Go through all interfaces, but we only care about network interface
   // For other interfaces such as usb, refer to sample code DeviceFinder.cpp
   std::vector<const PvDeviceInfoGEV *> dinfo_gev_vec;
-  for (decltype(interface_count) i = 0; i < interface_count; ++i) {
+  for (decltype(interface_cnt) i = 0; i < interface_cnt; ++i) {
     // Get pointer to the interface
     const PvInterface *interface = system_.GetInterface(i);
     // Is it a PvNetworkAdapter?
     const auto *nic = dynamic_cast<const PvNetworkAdapter *>(interface);
     if (nic) {
-      std::cout << label_ << i << " - " << interface->GetDisplayID().GetAscii()
-                << std::endl;
+      ROS_INFO("Interface: %s", interface->GetDisplayID().GetAscii());
       // Go through all the devices attached to the network interface
-      for (uint32_t j = 0; j < interface->GetDeviceCount(); ++j) {
+      const auto dev_cnt = interface->GetDeviceCount();
+      for (decltype(dev_cnt) j = 0; j < dev_cnt; ++j) {
         const PvDeviceInfo *dinfo = interface->GetDeviceInfo(j);
         // Is it a GigE Vision device?
         const auto *dinfo_gev = dynamic_cast<const PvDeviceInfoGEV *>(dinfo);
         if (dinfo_gev) {
-          std::cout << label_ << "  " << j << " - "
-                    << dinfo->GetDisplayID().GetAscii() << std::endl;
+          ROS_INFO("%d - %s", int(j), dinfo->GetDisplayID().GetAscii());
           dinfo_gev_vec.push_back(dinfo_gev);
         }
       }
@@ -97,52 +75,53 @@ void GigeCamera::FindDevice(const std::string &ip) {
 
   // Check GigE devices found on network adaptor
   if (dinfo_gev_vec.empty()) {
-    throw std::runtime_error("GigeCamera: No device found");
+    throw std::runtime_error("FlirGige: No device found.");
   }
+
   // Try finding the device with the correct ip address
   const auto it = std::find_if(dinfo_gev_vec.cbegin(), dinfo_gev_vec.cend(),
-                               [ip](const PvDeviceInfoGEV *dinfo) {
+                               [&ip](const PvDeviceInfoGEV *dinfo) {
     return ip == dinfo->GetIPAddress().GetAscii();
   });
 
   if (it == dinfo_gev_vec.end()) {
     // Did not find device with given ip address
     std::ostringstream error_msg;
-    error_msg << "GigeCamera: Device not found. Available IP Address:";
+    error_msg << "FlirGige: Device not found. Available IP Address:";
     for (const PvDeviceInfoGEV *dinfo : dinfo_gev_vec) {
       error_msg << " " << dinfo->GetIPAddress().GetAscii();
     }
-    throw std::runtime_error(error_msg.str());
+    throw std::runtime_error(
+        "FlirGige: Device not found. Available IP Address: " +
+        AvailableDevice());
   } else {
     // Found device with given ip address
-    LabeledOutput(std::string("Found device: ") +
-                  (*it)->GetIPAddress().GetAscii());
-    // Is the IP address valid?
-    if ((*it)->IsConfigurationValid()) {
+    PvDeviceInfoGEV *dinfo_gev = (*it);
+    display_id_ = std::string(dinfo_gev->GetDisplayID().GetAscii());
+    ROS_INFO("Found device: %s", display_id().c_str());
+    if (dinfo_gev->IsConfigurationValid()) {
       // Try connect and disconnect to verify
-      dinfo_ = *it;
+      dinfo_ = dinfo_gev;
       PvResult result;
-      LabeledOutput(std::string("--?-- ") + dinfo_->GetDisplayID().GetAscii());
+      ROS_INFO("--?-- %s", dinfo_display_id.c_str());
       // Creates and connects the device controller
       PvDevice *device = PvDevice::CreateAndConnect(dinfo_, &result);
       if (result.IsOK()) {
-        std::cout << label_ << "-->-- " << dinfo_->GetDisplayID().GetAscii()
-                  << std::endl;
-        std::cout << label_ << "--x-- " << dinfo_->GetDisplayID().GetAscii()
-                  << std::endl;
+        ROS_INFO("-->-- %s", display_id());
+        ROS_INFO("-->-- %s", display_id());
         PvDevice::Free(device);
       } else {
         // Maybe throw an exception here?
-        std::ostringstream error_msg;
-        error_msg << "GigeCamera: Unable to connect to "
-                  << dinfo_->GetDisplayID().GetAscii();
-        throw std::runtime_error(error_msg.str());
+        throw std::runtime_error("FlirGige: Unable to connect to " +
+                                 display_id());
       }
     }
   }
 }
 
-void GigeCamera::ConnectDevice() {
+std::string FlirGige::AvailableDevice() const {}
+
+void FlirGige::ConnectDevice() {
   std::cout << label_ << "Connecting to " << dinfo_->GetDisplayID().GetAscii();
   PvResult result;
   // Use a unique_ptr to manage device resource
@@ -152,13 +131,13 @@ void GigeCamera::ConnectDevice() {
     std::cout << " ... Done." << std::endl;
   } else {
     std::ostringstream error_msg;
-    error_msg << "GigeCamera: Unable to connect to "
+    error_msg << "FlirGige: Unable to connect to "
               << dinfo_->GetDisplayID().GetAscii();
     throw std::runtime_error(error_msg.str());
   }
 }
 
-void GigeCamera::OpenStream() {
+void FlirGige::OpenStream() {
   std::cout << label_ << "Opening stream to "
             << dinfo_->GetDisplayID().GetAscii();
   PvResult result;
@@ -170,13 +149,13 @@ void GigeCamera::OpenStream() {
   } else {
     // Maybe a function for throw exception?
     std::ostringstream error_msg;
-    error_msg << "GigeCamera: Unable to stream form "
+    error_msg << "FlirGige: Unable to stream form "
               << dinfo_->GetDisplayID().GetAscii();
     throw std::runtime_error(error_msg.str());
   }
 }
 
-void GigeCamera::ConfigureStream() {
+void FlirGige::ConfigureStream() {
   // If this is a GigE Vision devie, configure GigE Vision specific parameters
   auto *device_gev = dynamic_cast<PvDeviceGEV *>(device_.get());
   if (device_gev) {
@@ -189,13 +168,13 @@ void GigeCamera::ConfigureStream() {
                                      stream_gev->GetLocalPort());
   } else {
     std::ostringstream error_msg;
-    error_msg << "GigeCamera: This is not a GigE Vision device "
+    error_msg << "FlirGige: This is not a GigE Vision device "
               << dinfo_->GetDisplayID().GetAscii();
     throw std::runtime_error(error_msg.str());
   }
 }
 
-void GigeCamera::CreatePipeline() {
+void FlirGige::CreatePipeline() {
   LabeledOutput("Creating pipeline");
   // Create the PvPipeline object
   pipeline_.reset(new PvPipeline(stream_.get()));
@@ -207,7 +186,7 @@ void GigeCamera::CreatePipeline() {
   pipeline_->SetBufferSize(payload_size);
 }
 
-void GigeCamera::StartAcquisition() {
+void FlirGige::StartAcquisition() {
   PvGenParameterArray *device_params = device_->GetParameters();
   // Note: the pipeline must be initialized before we start acquisition
   std::cout << label_ << "Starting pipeline ... ";
@@ -222,7 +201,7 @@ void GigeCamera::StartAcquisition() {
   std::cout << "Done" << std::endl;
 }
 
-void GigeCamera::StopAcquisition() {
+void FlirGige::StopAcquisition() {
   // Get device parameters need to control streaming
   PvGenParameterArray *device_params = device_->GetParameters();
   // Stop image acquisition
@@ -237,7 +216,7 @@ void GigeCamera::StopAcquisition() {
   std::cout << "Done" << std::endl;
 }
 
-void GigeCamera::AcquireImages() {
+void FlirGige::AcquireImages() {
   // Get device parameters need to control streaming
   PvGenParameterArray *device_params = device_->GetParameters();
   int64_t width{0}, height{0};
@@ -317,7 +296,7 @@ void GigeCamera::AcquireImages() {
   }
 }
 
-void GigeCamera::SetAoi(const int width, const int height) {
+void FlirGige::SetAoi(const int width, const int height) {
   PvGenParameterArray *device_params = device_->GetParameters();
   // Get width and height parameter
   auto *width_param = dynamic_cast<PvGenInteger *>(device_params->Get("Width"));
@@ -341,7 +320,7 @@ void GigeCamera::SetAoi(const int width, const int height) {
   }
 }
 
-void GigeCamera::SetPixelFormat(BitSize bit) {
+void FlirGige::SetPixelFormat(BitSize bit) {
   PvGenParameterArray *device_params = device_->GetParameters();
   int64_t height = 0, width = 0;
   device_params->GetIntegerValue("Width", width);
@@ -365,7 +344,7 @@ void GigeCamera::SetPixelFormat(BitSize bit) {
             << " Bit: " << digital_output.GetAscii() << std::endl;
 }
 
-double GigeCamera::GetSpotPixel(const cv::Mat &image) const {
+double FlirGige::GetSpotPixel(const cv::Mat &image) const {
   auto c = image.cols / 2;
   auto r = image.rows / 2;
   auto s1 = image.at<uint16_t>(r - 1, c - 1);
@@ -375,7 +354,7 @@ double GigeCamera::GetSpotPixel(const cv::Mat &image) const {
   return static_cast<double>(s1 / 4 + s2 / 4 + s3 / 4 + s4 / 4);
 }
 
-void GigeCamera::LabeledOutput(const std::string &msg) const {
+void FlirGige::LabeledOutput(const std::string &msg) const {
   std::cout << label_ << msg << std::endl;
 }
 

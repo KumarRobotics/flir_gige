@@ -17,24 +17,24 @@ struct Planck {
   double F;
   double O;
   double R;
-  const double kT0{273.15};  ///< Kelvin at 0 celcius
+  static const double kT0{273.15};  ///< Kelvin at 0 celcius
 
   /**
    * @brief CelsiusToRaw Convert celsius to 16-bit raw data
    * @param t Celcius
    * @return raw data
    */
-  int CelsiusToRaw(const double t) const {
+  inline int CelsiusToRaw(const double t) const {
     return R / (std::exp(B / (t + kT0)) - F) + O;
   }
 
   /**
    * @brief RawToCelsius Convert 16-bit raw data to celsius
-   * @param S Raw data
+   * @param s Raw data
    * @return temperature in celsius
    */
-  double RawToCelsius(const int S) const {
-    return B / std::log(R / (S - O) + F) - kT0;
+  inline double RawToCelsius(const int s) const {
+    return B / std::log(R / (s - O) + F) - kT0;
   }
 };
 

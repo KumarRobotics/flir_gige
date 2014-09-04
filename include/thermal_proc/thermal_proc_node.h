@@ -1,5 +1,5 @@
-#ifndef FLIR_GIGE_THERMAL_PROC_H_
-#define FLIR_GIGE_THERMAL_PROC_H_
+#ifndef FLIR_GIGE_THERMAL_PROC_NODE_H_
+#define FLIR_GIGE_THERMAL_PROC_NODE_H_
 
 #include <cstdint>
 #include <mutex>
@@ -51,4 +51,4 @@ Planck GetPlanck(const sensor_msgs::CameraInfo &cinfo_msg);
 
 }  // namespace flir_gige
 
-#endif  // FLIR_GIGE_THERMAL_PROC_H_
+#endif  // FLIR_GIGE_THERMAL_PROC_NODE_H_

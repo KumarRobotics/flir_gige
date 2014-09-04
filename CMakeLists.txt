@@ -14,9 +14,7 @@ else()
 endif()
 
 find_package(catkin REQUIRED COMPONENTS
-    roscpp sensor_msgs std_msgs
-    image_transport camera_info_manager
-    dynamic_reconfigure cv_bridge nodelet
+    roscpp nodelet camera_base cv_brdige
     )
 find_package(OpenCV)
 
@@ -42,15 +40,13 @@ include_directories(
 
 # library
 add_library(${PROJECT_NAME}
-    src/gige_camera.cpp
-    src/flir_gige.cpp
-    src/thermal_proc/thermal_proc.cpp
-    src/thermal_proc/thermal_proc_nodelet.cpp
+    src/flir_gige/flir_gige.cpp
+    src/flir_gige/flir_gige_ros.cpp
+    src/flir_gige/flir_gige_node.cpp
     )
 target_link_libraries(${PROJECT_NAME}
     ${catkin_LIBRARIES}
     ${EBUS_LIBRARIES}
-    ${OpenCV_LIBRARIES}
     )
 
 ## Add cmake target dependencies of the executable/library
@@ -63,15 +59,8 @@ add_dependencies(${PROJECT_NAME}
 
 # node
 add_executable(${PROJECT_NAME}_node
-    src/flir_gige_node.cpp
+    src/flir_gige/flir_gige_main.cpp
     )
 target_link_libraries(${PROJECT_NAME}_node
-    ${PROJECT_NAME}
-    )
-
-add_executable(thermal_proc_node
-    src/thermal_proc/thermal_proc_node.cpp
-    )
-target_link_libraries(thermal_proc_node
     ${PROJECT_NAME}
     )

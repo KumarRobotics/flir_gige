@@ -5,10 +5,10 @@
 
 namespace flir_gige {
 
-class FlirNodelet : public nodelet::Nodelet {
+class FlirGigeNodelet : public nodelet::Nodelet {
  public:
-  FlirNodelet() : nodelet::Nodelet() {}
-  ~FlirNodelet() {
+  FlirGigeNodelet() : nodelet::Nodelet() {}
+  ~FlirGigeNodelet() {
     if (flir_gige_node_) {
       flir_gige_node_->End();
     }
@@ -29,7 +29,6 @@ class FlirNodelet : public nodelet::Nodelet {
   std::unique_ptr<FlirGigeNode> flir_gige_node_;
 };
 
-PLUGINLIB_DECLARE_CLASS(flir_gige, FlirNodelet, flir_gige::FlirNodelet,
-                        nodelet::Nodelet)
+PLUGINLIB_EXPORT_CLASS(FlirGigeNodelet, nodelet::Nodelet)
 
 }  // namespace flir_gige

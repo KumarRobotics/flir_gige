@@ -15,20 +15,20 @@ class ThermalProcNodelet : public nodelet::Nodelet {
   ~ThermalProcNodelet() {}
 
   virtual void onInit() {
-    ROS_WARN_STREAM("Starting");
     try {
-      thermal_proc_.reset(
-          new ThermalProc(getPrivateNodeHandle(), getPrivateNodeHandle()));
+      thermal_proc_node_.reset(
+          new ThermalProcNode(getPrivateNodeHandle(), getPrivateNodeHandle()));
     }
     catch (const std::exception &e) {
-      ROS_ERROR_STREAM("ThermalProc: " << e.what());
+      NODELET_ERROR("%s: %s", getPrivateNodeHandle().getNamespace().c_str(),
+                    e.what());
     }
   }
 
  private:
-  std::shared_ptr<ThermalProc> thermal_proc_;
+  std::shared_ptr<ThermalProcNode> thermal_proc_node_;
 };
 
-PLUGINLIB_DECLARE_CLASS(flir_gige, ThermalProcNodelet,
-                        flir_gige::ThermalProcNodelet, nodelet::Nodelet)
+PLUGINLIB_EXPORT_CLASS(ThermalProcNodelet, nodelet::Nodelet)
+
 }  // namespace flir_gige
