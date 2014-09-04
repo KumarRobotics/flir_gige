@@ -1,9 +1,8 @@
-#include "flir_gige/thermal_proc/thermal_proc.h"
+#include "thermal_proc/thermal_proc_node.h"
 
 #include <memory>
 #include <thread>
 
-#include <ros/ros.h>
 #include <nodelet/nodelet.h>
 #include <pluginlib/class_list_macros.h>
 

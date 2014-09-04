@@ -34,8 +34,11 @@ class FlirGige {
 
   const std::string &ip_address() const { return ip_address_; }
   const std::string &display_id() const { return display_id_; }
-  bool ready() const { return ready_; }
 
+  void Connect();
+  void Disconnect();
+  void StartAcquisition();
+  void StopAcquisition();
   void Configure(FlirGigeDynConfig &config);
   bool GrabImage(sensor_msgs::Image &image_msg);
 
@@ -43,23 +46,22 @@ class FlirGige {
   using PvDevicePtr = std::unique_ptr<PvDevice, FreeDevice>;
   using PvStreamPtr = std::unique_ptr<PvStream, FreeStream>;
   using PvPipelinePtr = std::unique_ptr<PvPipeline>;
+  using PvDeviceInfoGEVVec = std::vector<const PvDeviceInfoGEV *>;
 
-  bool FindDevice(const std::string &ip);
-  std::string AvailableDevice() const;
+  bool FindDevice(const std::string &ip,
+                  const PvDeviceInfoGEVVec &dinfo_gev_vec);
+  std::string AvailableDevice(const PvDeviceInfoGEVVec &dinfo_gev_vec) const;
+  PvDeviceInfoGEVVec GatherGevDevice() const;
 
-  void Connect();
-  void Disconnect();
   void ConnectDevice();
   void OpenStream();
   void ConfigureStream();
   void CreatePipeline();
-  void StartAcquisition();
-  void StopAcquisition();
 
-  void SetAoi(int *width, int *height);
-//  void SetPixelFormat(int bit);
+  void SetAoi(int *width, int *height) const;
+  void SetPixelFormat(bool raw) const;
 
-//  double GetSpotPixel(const cv::Mat &image) const;
+  //  double GetSpotPixel(const cv::Mat &image) const;
 
   std::string ip_address_;
   std::string display_id_;
@@ -69,8 +71,6 @@ class FlirGige {
   PvStreamPtr stream_;
   PvPipelinePtr pipeline_;
   PvGenParameterArray *param_array_;
-  bool ready_;
-  bool raw_;
 };
 
 }  // namespace flir_gige

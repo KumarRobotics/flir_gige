@@ -1,19 +1,4 @@
-/*
- * thermal_proc.cpp
- *  _   _             _           _____         _
- * | \ | | ___  _   _| | ____ _  |_   _|__  ___| |__
- * |  \| |/ _ \| | | | |/ / _` |   | |/ _ \/ __| '_ \
- * | |\  | (_) | |_| |   < (_| |   | |  __/ (__| | | |
- * |_| \_|\___/ \__,_|_|\_\__,_|   |_|\___|\___|_| |_|
- *
- *  Copyright (c) 2014 Nouka Technologies. All rights reserved.
- *
- *  This file is part of flir_gige.
- *
- *	Created on: 21/08/2014
- */
-
-#include "flir_gige/thermal_proc/thermal_proc.h"
+#include "thermal_proc/thermal_proc_node.h"
 
 #include <algorithm>
 #include <cmath>
@@ -22,10 +7,10 @@
 
 namespace flir_gige {
 
-ThermalProc::ThermalProc(const ros::NodeHandle &nh, const ros::NodeHandle &pnh)
+ThermalProcNode::ThermalProcNode(const ros::NodeHandle &nh, const ros::NodeHandle &pnh)
     : nh_{nh}, it_{nh}, server_{pnh} {
   image_transport::SubscriberStatusCallback connect_cb =
-      boost::bind(&ThermalProc::ConnectCb, this);
+      boost::bind(&ThermalProcNode::ConnectCb, this);
   pub_heat_ = it_.advertise("temperature", 1, connect_cb, connect_cb);
   pub_color_ = it_.advertise("color_map", 1, connect_cb, connect_cb);
 
@@ -33,21 +18,21 @@ ThermalProc::ThermalProc(const ros::NodeHandle &nh, const ros::NodeHandle &pnh)
                          << " pnh: " << pnh.getNamespace());
   pnh.param<double>("celsius_min", config_.celsius_min, 20);
   pnh.param<double>("celsius_max", config_.celsius_max, 40);
-  server_.setCallback(boost::bind(&ThermalProc::ConfigCb, this, _1, _2));
+  server_.setCallback(boost::bind(&ThermalProcNode::ConfigCb, this, _1, _2));
 }
 
-void ThermalProc::ConnectCb() {
+void ThermalProcNode::ConnectCb() {
   std::lock_guard<std::mutex> lock(connect_mutex_);
   if (!pub_heat_.getNumSubscribers() && !pub_color_.getNumSubscribers())
     sub_camera_.shutdown();
   else if (!sub_camera_) {
     image_transport::TransportHints hints("raw", ros::TransportHints(), nh_);
-    sub_camera_ = it_.subscribeCamera("image_raw", 1, &ThermalProc::CameraCb,
+    sub_camera_ = it_.subscribeCamera("image_raw", 1, &ThermalProcNode::CameraCb,
                                       this, hints);
   }
 }
 
-void ThermalProc::CameraCb(const sensor_msgs::ImageConstPtr &image_msg,
+void ThermalProcNode::CameraCb(const sensor_msgs::ImageConstPtr &image_msg,
                            const sensor_msgs::CameraInfoConstPtr &cinfo_msg) {
   // Verify camera is actually calibrated
   if (cinfo_msg->K[0] == 0.0 || cinfo_msg->D[0] == 0.0) {
@@ -95,7 +80,7 @@ void ThermalProc::CameraCb(const sensor_msgs::ImageConstPtr &image_msg,
   }
 }
 
-void ThermalProc::RawToJet(const cv::Mat &raw, const Planck &planck,
+void ThermalProcNode::RawToJet(const cv::Mat &raw, const Planck &planck,
                            cv::Mat *color) const {
   const int raw_min = planck.CelsiusToRaw(config_.celsius_min);
   const int raw_max = planck.CelsiusToRaw(config_.celsius_max);
@@ -106,7 +91,7 @@ void ThermalProc::RawToJet(const cv::Mat &raw, const Planck &planck,
   cv::applyColorMap(*color, *color, cv::COLORMAP_JET);
 }
 
-void ThermalProc::RawToHeat(const cv::Mat &raw, const Planck &planck,
+void ThermalProcNode::RawToHeat(const cv::Mat &raw, const Planck &planck,
                             cv::Mat *heat) const {
   for (int i = 0; i < raw.rows; ++i) {
     float *pheat = heat->ptr<float>(i);
@@ -117,7 +102,7 @@ void ThermalProc::RawToHeat(const cv::Mat &raw, const Planck &planck,
   }
 }
 
-void ThermalProc::ConfigCb(DynConfig &config, int level) {
+void ThermalProcNode::ConfigCb(DynConfig &config, int level) {
   if (level < 0) {
     config = config_;
     ROS_INFO(

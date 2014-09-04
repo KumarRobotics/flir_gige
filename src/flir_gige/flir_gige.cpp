@@ -13,17 +13,18 @@
 namespace flir_gige {
 
 FlirGige::FlirGige(const std::string &ip_address)
-    : ip_address_{ip_address}, dinfo_{nullptr}, ready_{false}, raw_{false} {
+    : ip_address_{ip_address}, dinfo_{nullptr} {
   // Find all devices on the network
   const PvResult result = system_.Find();
   if (!result.IsOK()) {
     throw std::runtime_error(std::string("PvSystem::Find Error: ") +
                              result.GetCodeString().GetAscii());
   }
-  if (!FindDevice(ip_address)) {
+  std::vector<const PvDeviceInfoGEV *> dinfo_gev_vec = GatherGevDevice();
+  if (!FindDevice(ip_address, dinfo_gev_vec)) {
     throw std::runtime_error(ip_address +
                              " not found. Available IP Address(es): " +
-                             AvailableDevice());
+                             AvailableDevice(dinfo_gev_vec));
   }
 }
 
@@ -41,11 +42,28 @@ void FlirGige::Disconnect() {
   param_array_ = nullptr;
 }
 
-void FlirGige::Configure(FlirGigeDynConfig &config) {
-  //  SetPixelFormat(config.raw);
+void FlirGige::StartAcquisition() {
+  // Note: the pipeline must be initialized before we start acquisition
+  ROS_INFO("Starting acquisition");
+  pipeline_->Start();
+  device_->StreamEnable();
+  param_array_->ExecuteCommand("AcquisitionStart");
 }
 
-bool FlirGige::FindDevice(const std::string &ip) {
+void FlirGige::StopAcquisition() {
+  // Get device parameters need to control streaming
+  if (!param_array_) return;
+  ROS_INFO("Stop acquisition");
+  param_array_->ExecuteCommand("AcquisitionStop");
+  device_->StreamDisable();
+  pipeline_->Stop();
+}
+
+void FlirGige::Configure(FlirGigeDynConfig &config) {
+  SetPixelFormat(config.raw);
+}
+
+FlirGige::PvDeviceInfoGEVVec FlirGige::GatherGevDevice() const {
   const int interface_cnt = system_.GetInterfaceCount();
   ROS_INFO_STREAM("Interface count:" << interface_cnt);
 
@@ -72,7 +90,11 @@ bool FlirGige::FindDevice(const std::string &ip) {
       }
     }
   }
+  return dinfo_gev_vec;
+}
 
+bool FlirGige::FindDevice(const std::string &ip,
+                          const PvDeviceInfoGEVVec &dinfo_gev_vec) {
   // Check GigE devices found on network adaptor
   if (dinfo_gev_vec.empty()) return false;
 
@@ -103,7 +125,14 @@ bool FlirGige::FindDevice(const std::string &ip) {
   return true;
 }
 
-std::string FlirGige::AvailableDevice() const {}
+std::string FlirGige::AvailableDevice(
+    const PvDeviceInfoGEVVec &dinfo_gev_vec) const {
+  std::string devices;
+  for (const PvDeviceInfoGEV *dinfo : dinfo_gev_vec) {
+    devices += dinfo->GetIPAddress().GetAscii() + std::string(" ");
+  }
+  return devices;
+}
 
 void FlirGige::ConnectDevice() {
   ROS_INFO("Connecting to %s", display_id().c_str());
@@ -149,22 +178,6 @@ void FlirGige::CreatePipeline() {
   // BufferCount should be at least 4
   pipeline_->SetBufferCount(4);
   pipeline_->SetBufferSize(payload_size);
-}
-
-void FlirGige::StartAcquisition() {
-  // Note: the pipeline must be initialized before we start acquisition
-  ROS_INFO("Starting acquisition");
-  pipeline_->Start();
-  device_->StreamEnable();
-  param_array_->ExecuteCommand("AcquisitionStart");
-}
-
-void FlirGige::StopAcquisition() {
-  // Get device parameters need to control streaming
-  ROS_INFO("Stop acquisition");
-  param_array_->ExecuteCommand("AcquisitionStop");
-  device_->StreamDisable();
-  pipeline_->Stop();
 }
 
 bool FlirGige::GrabImage(sensor_msgs::Image &image_msg) {
@@ -213,14 +226,16 @@ bool FlirGige::GrabImage(sensor_msgs::Image &image_msg) {
   param_array_->GetIntegerValue("Width", width);
   param_array_->GetIntegerValue("Height", height);
 
+  int64_t bit = 0;
+  param_array_->GetEnumValue("DigitalOutput", bit);
   // Assemble image msg
   image_msg.height = height;
   image_msg.width = width;
   image_msg.step = image_msg.width;
-  if (raw_) {
-    image_msg.encoding = sensor_msgs::image_encodings::MONO16;
-  } else {
+  if (bit == 2) {
     image_msg.encoding = sensor_msgs::image_encodings::MONO8;
+  } else if (bit == 3) {
+    image_msg.encoding = sensor_msgs::image_encodings::MONO16;
   }
 
   const size_t data_size = image->GetImageSize();
@@ -235,7 +250,7 @@ bool FlirGige::GrabImage(sensor_msgs::Image &image_msg) {
 }
 
 // This function is not intended to be used
-void FlirGige::SetAoi(int *width, int *height) {
+void FlirGige::SetAoi(int *width, int *height) const {
   // Get current width and height
   int64_t curr_width = 0;
   int64_t curr_height = 0;
@@ -250,23 +265,16 @@ void FlirGige::SetAoi(int *width, int *height) {
   }
 }
 
-// void FlirGige::SetPixelFormat(int bit) {
-//  PvGenParameterArray *device_params = device_->GetParameters();
-//  int64_t height = 0, width = 0;
-//  device_params->GetIntegerValue("Width", width);
-//  device_params->GetIntegerValue("Height", height);
-//  // Set digital output and pixel format
-//  if (bit == BIT8BIT) {
-//    device_params->SetEnumValue("PixelFormat", PvPixelMono8);
-//    device_params->SetEnumValue("DigitalOutput", static_cast<int64_t>(bit));
-//  } else if (bit == BIT14BIT) {
-//    device_params->SetEnumValue("PixelFormat", PvPixelMono14);
-//    device_params->SetEnumValue("DigitalOutput", static_cast<int64_t>(bit));
-//  }
-//  // Verify setting
-//  PvString digital_output;
-//  device_params->GetEnumValue("DigitalOutput", digital_output);
-//}
+void FlirGige::SetPixelFormat(bool raw) const {
+  // Set digital output and pixel format
+  if (raw) {
+    param_array_->SetEnumValue("PixelFormat", PvPixelMono8);
+    param_array_->SetEnumValue("DigitalOutput", static_cast<int64_t>(2));
+  } else {
+    param_array_->SetEnumValue("PixelFormat", PvPixelMono14);
+    param_array_->SetEnumValue("DigitalOutput", static_cast<int64_t>(3));
+  }
+}
 
 // double FlirGige::GetSpotPixel(const cv::Mat &image) const {
 //  auto c = image.cols / 2;

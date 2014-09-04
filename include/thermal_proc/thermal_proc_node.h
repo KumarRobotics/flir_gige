@@ -22,11 +22,11 @@
 
 namespace flir_gige {
 
-class ThermalProc {
+class ThermalProcNode {
  public:
   using DynConfig = ::flir_gige::ThermalProcDynConfig;
 
-  ThermalProc(const ros::NodeHandle &nh, const ros::NodeHandle &pnh);
+  ThermalProcNode(const ros::NodeHandle &nh, const ros::NodeHandle &pnh);
 
  private:
   void CameraCb(const sensor_msgs::ImageConstPtr &image_msg,
