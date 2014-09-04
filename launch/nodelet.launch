@@ -37,22 +37,4 @@
         <param name="raw" type="bool" value="$(arg raw)"/>
     </node>
 
-    <!-- Need to fix this -->
-<!--     <node if="$(arg proc)" pkg="nodelet" type="nodelet" name="thermal_proc"
-        args="load flir_gige/ThermalProcNodelet $(arg manager)"
-        output="$(arg output)">
-        <remap from="~image_raw" to="/$(camera)/image_raw"/>
-        <remap from="~camera_info" to="/$(camera)/camera_info"/>
-    </node>
- -->
-    <!-- View -->
-    <arg name="view" default="false"/>
-    <group if="$(arg view)">
-        <node pkg="image_view" type="image_view" name="$(arg camera)_raw"
-            output="$(arg output)" args="image:=/$(arg camera)/image_raw">
-        </node>
-        <node if="$(arg proc)" type="image_view" name="$(arg camera)_proc"
-            output="$(arg output)" args="image:=/$(arg camera)/image_proc">
-        </node>
-    </group>
 </launch>

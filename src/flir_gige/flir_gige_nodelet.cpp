@@ -29,6 +29,6 @@ class FlirGigeNodelet : public nodelet::Nodelet {
   std::unique_ptr<FlirGigeNode> flir_gige_node_;
 };
 
-PLUGINLIB_EXPORT_CLASS(FlirGigeNodelet, nodelet::Nodelet)
+PLUGINLIB_EXPORT_CLASS(flir_gige::FlirGigeNodelet, nodelet::Nodelet)
 
 }  // namespace flir_gige

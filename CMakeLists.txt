@@ -43,6 +43,7 @@ add_library(${PROJECT_NAME}
     src/flir_gige/flir_gige.cpp
     src/flir_gige/flir_gige_ros.cpp
     src/flir_gige/flir_gige_node.cpp
+    src/flir_gige/flir_gige_nodelet.cpp
     )
 target_link_libraries(${PROJECT_NAME}
     ${catkin_LIBRARIES}
