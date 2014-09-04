@@ -9,22 +9,21 @@ namespace flir_gige {
  * @brief The Planck constants from flir thermal camera
  */
 struct Planck {
-  Planck() = default;
-  Planck(const double B, const double F, const double O, const double R)
-      : B{B}, F{F}, O{O}, R{R} {}
+  Planck() : B{0}, F{0}, O{0}, R{0} {}
+  Planck(double B, double F, double O, double R) : B{B}, F{F}, O{O}, R{R} {}
 
   double B;
   double F;
   double O;
   double R;
-  static const double kT0{273.15};  ///< Kelvin at 0 celcius
+  static constexpr double kT0{273.15};  ///< Kelvin at 0 celcius
 
   /**
    * @brief CelsiusToRaw Convert celsius to 16-bit raw data
    * @param t Celcius
    * @return raw data
    */
-  inline int CelsiusToRaw(const double t) const {
+  int CelsiusToRaw(const double t) const {
     return R / (std::exp(B / (t + kT0)) - F) + O;
   }
 
@@ -33,7 +32,7 @@ struct Planck {
    * @param s Raw data
    * @return temperature in celsius
    */
-  inline double RawToCelsius(const int s) const {
+  double RawToCelsius(const int s) const {
     return B / std::log(R / (s - O) + F) - kT0;
   }
 };

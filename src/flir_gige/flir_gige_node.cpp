@@ -1,58 +1,16 @@
 #include "flir_gige/flir_gige_node.h"
 
-#include <memory>
-#include <functional>
-
-#include <ros/ros.h>
-#include <image_transport/image_transport.h>
-#include <std_msgs/Header.h>
-#include <sensor_msgs/Image.h>
-#include <sensor_msgs/CameraInfo.h>
-#include <sensor_msgs/image_encodings.h>
-#include <sensor_msgs/Temperature.h>
-#include <dynamic_reconfigure/server.h>
-
-#include "flir_gige/gige_camera.h"
-
 namespace flir_gige {
 
-using sensor_msgs::CameraInfo;
-using sensor_msgs::CameraInfoPtr;
-using camera_info_manager::CameraInfoManager;
-
-FlirGige::FlirGige(const ros::NodeHandle &nh)
-    : nh_{nh},
-      it_{nh},
-      pub_camera_{it_.advertiseCamera("image_raw", 1)},
-      pub_temperature_{nh_.advertise<sensor_msgs::Temperature>("spot", 1)},
-      server_{nh} {
-  // Get ros parameteres
-  double fps;
-  nh_.param<double>("fps", fps, 20.0);
-  ROS_ASSERT_MSG(fps > 0, "FlirGige: fps must be greater than 0");
-  rate_.reset(new ros::Rate(fps));
-
-  // Setup up camera info manager
-  nh_.param<std::string>("frame_id", camera_name_, std::string("flir_a5"));
-  std::string calib_url;
-  nh_.param<std::string>("calib_url", calib_url, "");
-
-  cinfo_manager_.reset(new CameraInfoManager(nh_, camera_name_, calib_url));
-
-  // Setup camera dynamic reconfigure callback
-  server_.setCallback(boost::bind(&FlirGige::ConfigCb, this, _1, _2));
-
-  // Create a camera
-  std::string ip_address;
-  nh_.param<std::string>("ip_address", ip_address, std::string(""));
-  gige_camera_.reset(new FlirGige(ip_address));
-  gige_camera_->use_image =
-      std::bind(&FlirGige::PublishImage, this, std::placeholders::_1,
-                std::placeholders::_2);
-  gige_camera_->use_temperature =
-      std::bind(&FlirGige::PublishTemperature, this, std::placeholders::_1);
+void FlirGigeNode::Setup(FlirGigeDynConfig &config) {
+  flir_gige_ros_.set_fps(config.fps);
+  flir_gige_ros_.camera().Configure(config);
 }
 
+//FlirGige::FlirGige(const ros::NodeHandle &nh)
+//      pub_temperature_{nh_.advertise<sensor_msgs::Temperature>("spot", 1)}
+
+/*
 void FlirGige::Run() {
   GigeConfig config;
   nh_.param<bool>("color", config.color, config.color);
@@ -61,12 +19,16 @@ void FlirGige::Run() {
   gige_camera_->Configure(config);
   gige_camera_->Start();
 }
+*/
 
+/*
 void FlirGige::End() {
   gige_camera_->Stop();
   gige_camera_->Disconnect();
 }
+*/
 
+/*
 void FlirGige::PublishImage(const cv::Mat &image, const Planck &planck) {
   std_msgs::Header header;
   header.stamp = ros::Time::now();
@@ -83,7 +45,9 @@ void FlirGige::PublishImage(const cv::Mat &image, const Planck &planck) {
   pub_camera_.publish(image_, cinfo_);
   rate_->sleep();
 }
+*/
 
+/*
 void FlirGige::PublishTemperature(const std::pair<double, double> &spot) {
   // Construct a temperature mesage
   sensor_msgs::Temperature temperature;
@@ -93,7 +57,9 @@ void FlirGige::PublishTemperature(const std::pair<double, double> &spot) {
   temperature.variance = spot.second;
   pub_temperature_.publish(temperature);
 }
+*/
 
+/*
 std::string FlirGige::GetImageEncoding(const cv::Mat &image) const {
   std::string encoding;
   switch (image.type()) {
@@ -111,7 +77,9 @@ std::string FlirGige::GetImageEncoding(const cv::Mat &image) const {
   }
   return encoding;
 }
+*/
 
+/*
 void FlirGige::ConfigCb(FlirDynConfig &config, int level) {
   // Do nothing when first starting
   if (level < 0) {
@@ -133,5 +101,6 @@ void FlirGige::ConfigCb(FlirDynConfig &config, int level) {
   gige_camera_->Configure(gige_config);
   gige_camera_->Start();
 }
+*/
 
 }  // namespace flir_gige

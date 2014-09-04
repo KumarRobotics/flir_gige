@@ -14,7 +14,7 @@ else()
 endif()
 
 find_package(catkin REQUIRED COMPONENTS
-    roscpp nodelet camera_base cv_brdige
+    roscpp nodelet camera_base cv_bridge
     )
 find_package(OpenCV)
 
@@ -31,8 +31,8 @@ catkin_package(
     #  DEPENDS system_lib
     )
 
-include_directories(include)
 include_directories(
+    include
     ${catkin_INCLUDE_DIRS}
     ${EBUS_INCLUDE_DIRS}
     ${OpenCV_INCLUDE_DIRS}
@@ -49,6 +49,14 @@ target_link_libraries(${PROJECT_NAME}
     ${EBUS_LIBRARIES}
     )
 
+# node
+add_executable(${PROJECT_NAME}_node
+    src/flir_gige/flir_gige_main.cpp
+    )
+target_link_libraries(${PROJECT_NAME}_node
+    ${PROJECT_NAME}
+    )
+
 ## Add cmake target dependencies of the executable/library
 add_dependencies(${PROJECT_NAME}
     ${catkin_EXPORTED_TARGETS}
@@ -57,10 +65,3 @@ add_dependencies(${PROJECT_NAME}
     ${${PROJECT_NAME}_EXPORTED_TARGETS}
     )
 
-# node
-add_executable(${PROJECT_NAME}_node
-    src/flir_gige/flir_gige_main.cpp
-    )
-target_link_libraries(${PROJECT_NAME}_node
-    ${PROJECT_NAME}
-    )

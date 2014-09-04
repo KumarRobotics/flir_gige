@@ -14,6 +14,7 @@
 #include <PvPipeline.h>
 
 #include <sensor_msgs/Image.h>
+#include <flir_gige/FlirGigeDynConfig.h>
 
 #include "flir_gige/planck.h"
 
@@ -32,36 +33,33 @@ class FlirGige {
   FlirGige(const std::string &ip_address);
 
   const std::string &ip_address() const { return ip_address_; }
-  const std::string &display_id() const { return display_di_; }
-
-  void Connect();
-
-  void Start();
-
-  void Stop();
-
-  void Disconnect();
+  const std::string &display_id() const { return display_id_; }
+  bool ready() const { return ready_; }
 
   void Configure(FlirGigeDynConfig &config);
+  bool GrabImage(sensor_msgs::Image &image_msg);
 
  private:
   using PvDevicePtr = std::unique_ptr<PvDevice, FreeDevice>;
   using PvStreamPtr = std::unique_ptr<PvStream, FreeStream>;
   using PvPipelinePtr = std::unique_ptr<PvPipeline>;
 
-  void FindDevice(const std::string &ip);
+  bool FindDevice(const std::string &ip);
   std::string AvailableDevice() const;
+
+  void Connect();
+  void Disconnect();
   void ConnectDevice();
   void OpenStream();
   void ConfigureStream();
   void CreatePipeline();
   void StartAcquisition();
   void StopAcquisition();
-  void AcquireImages();
-  void LabeledOutput(const std::string &msg) const;
 
-  double GetSpotPixel(const cv::Mat &image) const;
-  void SetPixelFormat(int bit);
+  void SetAoi(int *width, int *height);
+//  void SetPixelFormat(int bit);
+
+//  double GetSpotPixel(const cv::Mat &image) const;
 
   std::string ip_address_;
   std::string display_id_;
@@ -70,6 +68,9 @@ class FlirGige {
   PvDevicePtr device_;
   PvStreamPtr stream_;
   PvPipelinePtr pipeline_;
+  PvGenParameterArray *param_array_;
+  bool ready_;
+  bool raw_;
 };
 
 }  // namespace flir_gige

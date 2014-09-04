@@ -11,7 +11,8 @@ class FlirGigeRos : public CameraRosBase {
   FlirGigeRos(const ros::NodeHandle& nh)
       : CameraRosBase{nh}, flir_gige_{identifier()} {}
 
-  virtual bool Grab(const sensor_msgs::ImagePtr* image_msg) override;
+  FlirGige& camera() { return flir_gige_; }
+  virtual bool Grab(const sensor_msgs::ImagePtr& image_msg) override;
 
  private:
   FlirGige flir_gige_;
