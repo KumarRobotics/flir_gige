@@ -7,7 +7,7 @@ namespace flir_gige {
 
 class FlirGigeNodelet : public nodelet::Nodelet {
  public:
-  FlirGigeNodelet() : nodelet::Nodelet() {}
+  FlirGigeNodelet() = default;
   ~FlirGigeNodelet() {
     if (flir_gige_node_) {
       flir_gige_node_->End();
