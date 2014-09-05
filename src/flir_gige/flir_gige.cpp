@@ -13,14 +13,14 @@
 namespace flir_gige {
 
 FlirGige::FlirGige(const std::string &ip_address)
-    : ip_address_{ip_address}, dinfo_{nullptr} {
+    : ip_address_{ip_address}, dinfo_{nullptr}, param_array_{nullptr} {
   // Find all devices on the network
   const PvResult result = system_.Find();
   if (!result.IsOK()) {
     throw std::runtime_error(std::string("PvSystem::Find Error: ") +
                              result.GetCodeString().GetAscii());
   }
-  std::vector<const PvDeviceInfoGEV *> dinfo_gev_vec = GatherGevDevice();
+  const PvDeviceInfoGEVVec dinfo_gev_vec = GatherGevDevice();
   if (!FindDevice(ip_address, dinfo_gev_vec)) {
     throw std::runtime_error(ip_address +
                              " not found. Available IP Address(es): " +

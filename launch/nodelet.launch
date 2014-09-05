@@ -37,4 +37,13 @@
         <param name="raw" type="bool" value="$(arg raw)"/>
     </node>
 
+    <!-- View -->
+    <group if="$(arg view)">
+        <node pkg="image_view" type="image_view" name="$(arg camera)_raw"
+            output="$(arg output)" args="image:=/$(arg camera)/image_raw">
+        </node>
+        <node if="$(arg proc)" type="image_view" name="$(arg camera)_proc"
+            output="$(arg output)" args="image:=/$(arg camera)/image_proc">
+        </node>
+    </group>
 </launch>
