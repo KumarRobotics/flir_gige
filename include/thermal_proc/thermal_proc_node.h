@@ -24,14 +24,12 @@ namespace flir_gige {
 
 class ThermalProcNode {
  public:
-  using DynConfig = ::flir_gige::ThermalProcDynConfig;
-
   ThermalProcNode(const ros::NodeHandle &nh, const ros::NodeHandle &pnh);
 
  private:
   void CameraCb(const sensor_msgs::ImageConstPtr &image_msg,
                 const sensor_msgs::CameraInfoConstPtr &cinfo_msg);
-  void ConfigCb(DynConfig &config, int level);
+  void ConfigCb(ThermalProcDynConfig &config, int level);
   void ConnectCb();
 
   void RawToHeat(const cv::Mat &raw, const Planck &planck, cv::Mat *heat) const;
@@ -42,9 +40,9 @@ class ThermalProcNode {
   image_transport::CameraSubscriber sub_camera_;
   image_transport::Publisher pub_heat_;
   image_transport::Publisher pub_color_;
-  dynamic_reconfigure::Server<DynConfig> server_;
+  dynamic_reconfigure::Server<ThermalProcDynConfig> server_;
   std::mutex connect_mutex_;
-  DynConfig config_;
+  ThermalProcDynConfig config_;
 };
 
 Planck GetPlanck(const sensor_msgs::CameraInfo &cinfo_msg);

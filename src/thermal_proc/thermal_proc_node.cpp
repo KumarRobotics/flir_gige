@@ -102,7 +102,7 @@ void ThermalProcNode::RawToHeat(const cv::Mat &raw, const Planck &planck,
   }
 }
 
-void ThermalProcNode::ConfigCb(DynConfig &config, int level) {
+void ThermalProcNode::ConfigCb(ThermalProcDynConfig &config, int level) {
   if (level < 0) {
     config = config_;
     ROS_INFO(

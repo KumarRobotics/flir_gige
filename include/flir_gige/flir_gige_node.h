@@ -10,7 +10,7 @@ namespace flir_gige {
 class FlirGigeNode : public CameraNodeBase<FlirGigeDynConfig> {
  public:
   FlirGigeNode(const ros::NodeHandle &nh)
-      : CameraNodeBase{nh}, flir_gige_ros_{nh} {}
+      : CameraNodeBase(nh), flir_gige_ros_(nh) {}
 
   virtual void Acquire() override;
   virtual void Setup(FlirGigeDynConfig &config) override;

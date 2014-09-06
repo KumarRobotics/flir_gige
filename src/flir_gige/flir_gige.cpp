@@ -168,7 +168,8 @@ void FlirGige::CreatePipeline() {
   pipeline_->SetBufferSize(payload_size);
 }
 
-bool FlirGige::GrabImage(sensor_msgs::Image &image_msg) {
+bool FlirGige::GrabImage(sensor_msgs::Image &image_msg,
+                         sensor_msgs::CameraInfo &cinfo_msg) {
   static bool skip_next_frame = false;
 
   // Start loop for acquisition
@@ -207,12 +208,25 @@ bool FlirGige::GrabImage(sensor_msgs::Image &image_msg) {
   PvImage *image = buffer->GetImage();
 
   // Get device parameters need to control streaming
-  int64_t width{0}, height{0};
+  int64_t width, height;
   param_array_->GetIntegerValue("Width", width);
   param_array_->GetIntegerValue("Height", height);
 
-  int64_t bit = 0;
+  int64_t bit;
   param_array_->GetEnumValue("DigitalOutput", bit);
+
+  int64_t R;
+  double F, B, O;
+  param_array_->GetIntegerValue("R", R);
+  param_array_->GetFloatValue("F", F);
+  param_array_->GetFloatValue("B", B);
+  param_array_->GetFloatValue("O", O);
+  // Assemble cinfo msg
+  cinfo_msg.R[0] = B;
+  cinfo_msg.R[1] = F;
+  cinfo_msg.R[2] = O;
+  cinfo_msg.R[3] = R;
+
   // Assemble image msg
   image_msg.height = height;
   image_msg.width = width;
@@ -233,6 +247,11 @@ bool FlirGige::GrabImage(sensor_msgs::Image &image_msg) {
   // Release the buffer back to the pipeline
   pipeline_->ReleaseBuffer(buffer);
   return true;
+}
+
+bool FlirGige::GrabTemprature(sensor_msgs::Temperature &temp_msg) {
+  temp_msg.variance = 0;
+  return param_array_->GetFloatValue("Spot", temp_msg.temperature).IsOK();
 }
 
 // This function is not intended to be used
