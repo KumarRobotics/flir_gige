@@ -29,6 +29,18 @@ void ThermalProcNode::ConnectCb() {
   }
 }
 
+void ThermalProcNode::ConfigCb(ThermalProcDynConfig &config, int level) {
+  if (level < 0) {
+    ROS_INFO("%s: %s", pnh_.getNamespace().c_str(),
+             "Initializaing reconfigure server");
+  }
+  // Make sure that max is greater than min
+  config.celsius_max = (config.celsius_max > config.celsius_min)
+                           ? config.celsius_max
+                           : (config.celsius_min + 5);
+  config_ = config;
+}
+
 void ThermalProcNode::CameraCb(
     const sensor_msgs::ImageConstPtr &image_msg,
     const sensor_msgs::CameraInfoConstPtr &cinfo_msg) {
@@ -75,8 +87,11 @@ void ThermalProcNode::RawToJet(const cv::Mat &raw, const Planck &planck,
   cv::applyColorMap(*color, *color, cv::COLORMAP_JET);
 }
 
-void ThermalProcNode::RawToHeat(const cv::Mat &raw, const Planck &planck,
-                                cv::Mat *heat) const {
+Planck GetPlanck(const sensor_msgs::CameraInfo &cinfo_msg) {
+  return Planck(cinfo_msg.R[0], cinfo_msg.R[1], cinfo_msg.R[2], cinfo_msg.R[3]);
+}
+
+void RawToHeat(const cv::Mat &raw, const Planck &planck, cv::Mat *heat) {
   for (int i = 0; i < raw.rows; ++i) {
     float *pheat = heat->ptr<float>(i);
     const uint16_t *praw = raw.ptr<uint16_t>(i);
@@ -84,22 +99,6 @@ void ThermalProcNode::RawToHeat(const cv::Mat &raw, const Planck &planck,
       pheat[j] = static_cast<uint16_t>(planck.RawToCelsius(praw[j]));
     }
   }
-}
-
-void ThermalProcNode::ConfigCb(ThermalProcDynConfig &config, int level) {
-  if (level < 0) {
-    ROS_INFO("%s: %s", pnh_.getNamespace().c_str(),
-             "Initializaing reconfigure server");
-  }
-  // Make sure that max is greater than min
-  config.celsius_max = (config.celsius_max > config.celsius_min)
-                           ? config.celsius_max
-                           : (config.celsius_min + 5);
-  config_ = config;
-}
-
-Planck GetPlanck(const sensor_msgs::CameraInfo &cinfo_msg) {
-  return Planck(cinfo_msg.R[0], cinfo_msg.R[1], cinfo_msg.R[2], cinfo_msg.R[3]);
 }
 
 }  // namespace flir_gige

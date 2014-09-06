@@ -31,7 +31,6 @@ class ThermalProcNode {
   void ConfigCb(ThermalProcDynConfig &config, int level);
   void ConnectCb();
 
-  void RawToHeat(const cv::Mat &raw, const Planck &planck, cv::Mat *heat) const;
   void RawToJet(const cv::Mat &raw, const Planck &planck, cv::Mat *color) const;
 
   ros::NodeHandle nh_, pnh_;
@@ -45,6 +44,7 @@ class ThermalProcNode {
 
 Planck GetPlanck(const sensor_msgs::CameraInfo &cinfo_msg);
 
+void RawToHeat(const cv::Mat &raw, const Planck &planck, cv::Mat *heat);
 }  // namespace flir_gige
 
 #endif  // FLIR_GIGE_THERMAL_PROC_NODE_H_

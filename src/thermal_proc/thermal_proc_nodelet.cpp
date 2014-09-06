@@ -25,7 +25,7 @@ class ThermalProcNodelet : public nodelet::Nodelet {
   }
 
  private:
-  std::shared_ptr<ThermalProcNode> thermal_proc_node_;
+  std::unique_ptr<ThermalProcNode> thermal_proc_node_;
 };
 
 PLUGINLIB_EXPORT_CLASS(ThermalProcNodelet, nodelet::Nodelet)
