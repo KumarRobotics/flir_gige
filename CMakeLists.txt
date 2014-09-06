@@ -44,9 +44,12 @@ add_library(${PROJECT_NAME}
     src/flir_gige/flir_gige_ros.cpp
     src/flir_gige/flir_gige_node.cpp
     src/flir_gige/flir_gige_nodelet.cpp
+    src/thermal_proc/thermal_proc_node.cpp
+    src/thermal_proc/thermal_proc_nodelet.cpp
     )
 target_link_libraries(${PROJECT_NAME}
     ${catkin_LIBRARIES}
+    ${OpenCV_LIBRARIES}
     ${EBUS_LIBRARIES}
     )
 
@@ -57,6 +60,12 @@ add_executable(${PROJECT_NAME}_node
 target_link_libraries(${PROJECT_NAME}_node
     ${PROJECT_NAME}
     )
+add_executable(thermal_proc_node
+    src/thermal_proc/thermal_proc_main.cpp
+    )
+target_link_libraries(thermal_proc_node
+    ${PROJECT_NAME}
+    )
 
 ## Add cmake target dependencies of the executable/library
 add_dependencies(${PROJECT_NAME}
@@ -65,4 +74,3 @@ add_dependencies(${PROJECT_NAME}
     ${PROJECT_NAME}_gencpp
     ${${PROJECT_NAME}_EXPORTED_TARGETS}
     )
-

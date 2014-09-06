@@ -5,12 +5,11 @@
 #include <mutex>
 
 #include <ros/ros.h>
-#include <std_msgs/Float32MultiArray.h>
+#include <cv_bridge/cv_bridge.h>
+#include <image_transport/image_transport.h>
 #include <sensor_msgs/Image.h>
 #include <sensor_msgs/image_encodings.h>
 #include <sensor_msgs/CameraInfo.h>
-#include <image_transport/image_transport.h>
-#include <cv_bridge/cv_bridge.h>
 #include <dynamic_reconfigure/server.h>
 
 #include <opencv2/core/core.hpp>
@@ -38,9 +37,8 @@ class ThermalProcNode {
   ros::NodeHandle nh_, pnh_;
   image_transport::ImageTransport it_;
   image_transport::CameraSubscriber sub_camera_;
-  image_transport::Publisher pub_heat_;
-  image_transport::Publisher pub_color_;
-  dynamic_reconfigure::Server<ThermalProcDynConfig> server_;
+  image_transport::Publisher pub_proc_;
+  dynamic_reconfigure::Server<ThermalProcDynConfig> cfg_server_;
   std::mutex connect_mutex_;
   ThermalProcDynConfig config_;
 };
