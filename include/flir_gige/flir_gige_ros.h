@@ -14,7 +14,8 @@ class FlirGigeRos : public CameraRosBase {
       : CameraRosBase(nh),
         flir_gige_(identifier()),
         nh_(nh),
-        temp_pub_(nh_.advertise<sensor_msgs::Temperature>("spot", 1)) {
+        temp_pub_(nh_.advertise<sensor_msgs::Temperature>("spot", 1)),
+        temp_msg_(new sensor_msgs::Temperature()) {
     SetHardwareId(flir_gige_.display_id());
   }
 
