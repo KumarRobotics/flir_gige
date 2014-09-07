@@ -24,7 +24,7 @@ void ThermalProcNode::ConnectCb() {
     sub_camera_.shutdown();
   else if (!sub_camera_) {
     image_transport::TransportHints hints("raw", ros::TransportHints(), nh_);
-    sub_camera_ = it_.subscribeCamera("image_raw", 1,
+    sub_camera_ = it_.subscribeCamera("image_raw", 2,
                                       &ThermalProcNode::CameraCb, this, hints);
   }
 }

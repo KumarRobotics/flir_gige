@@ -1,0 +1,26 @@
+<launch>
+    <!--Node Settings-->
+    <arg name="camera" default="flir_gige"/>
+    <arg name="test" default="false"/>
+    <arg name="bag" default="/media/chao/Seagate/bag/pennstate/scab/2014-09-05-13-47-08.bag"/>
+    <arg name="output" default="screen"/>
+    <arg name="proc" default="false"/>
+    <arg name="view" default="false"/>
+
+    <!--Bagfile-->
+    <node if="$(arg test)" pkg="rosbag" type="play" name="player"
+        args="$(arg bag)">
+    </node>
+
+    <!-- Thermal Proc -->
+    <node pkg="flir_gige" type="thermal_proc_node"
+        name="thermal_proc" ns="$(arg camera)" output="$(arg output)">
+    </node>
+
+    <!-- View -->
+    <arg name="image" default="proc"/>
+    <node if="$(arg view)" pkg="image_view" type="image_view"
+        name="$(arg camera)_$(arg view)" output="$(arg output)"
+        args="image:=/$(arg camera)/image_$(arg image)">
+    </node>
+</launch>
