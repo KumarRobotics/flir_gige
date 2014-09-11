@@ -68,7 +68,7 @@ void CalibProcNode::ImageCb(const sensor_msgs::ImageConstPtr &image_msg) {
 
   // Detect circles grid
   cv::Mat display;
-  DetectAndDrawCriclesGrid(inverted, cv::Size(5, 4), display);
+  DetectAndDrawCriclesGrid(inverted, cv::Size(4, 5), display);
 
   cv::Mat calib(inverted);
 
