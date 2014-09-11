@@ -47,6 +47,7 @@ void FlirGige::StartAcquisition() {
   pipeline_->Start();
   device_->StreamEnable();
   param_array_->ExecuteCommand("AcquisitionStart");
+  CacheParams();
 }
 
 void FlirGige::StopAcquisition() {
@@ -208,29 +209,16 @@ bool FlirGige::GrabImage(sensor_msgs::Image &image_msg,
   PvImage *image = buffer->GetImage();
 
   // Get device parameters need to control streaming
-  int64_t width, height;
-  param_array_->GetIntegerValue("Width", width);
-  param_array_->GetIntegerValue("Height", height);
-
-  int64_t bit;
-  param_array_->GetEnumValue("DigitalOutput", bit);
-
-  int64_t R;
-  double F, B, O;
-  param_array_->GetIntegerValue("R", R);
-  param_array_->GetFloatValue("F", F);
-  param_array_->GetFloatValue("B", B);
-  param_array_->GetFloatValue("O", O);
   // Assemble cinfo msg
-  cinfo_msg.R[0] = B;
-  cinfo_msg.R[1] = F;
-  cinfo_msg.R[2] = O;
-  cinfo_msg.R[3] = R;
+  cinfo_msg.R[0] = cache_.B;
+  cinfo_msg.R[1] = cache_.F;
+  cinfo_msg.R[2] = cache_.O;
+  cinfo_msg.R[3] = cache_.R;
 
   // Assemble image msg
-  image_msg.height = height;
-  image_msg.width = width;
-  if (bit == 2) {
+  image_msg.height = cache_.height;
+  image_msg.width = cache_.width;
+  if (cache_.bit == 2) {
     image_msg.encoding = sensor_msgs::image_encodings::MONO8;
     image_msg.step = image_msg.width;
   } else {
@@ -247,6 +235,30 @@ bool FlirGige::GrabImage(sensor_msgs::Image &image_msg,
   // Release the buffer back to the pipeline
   pipeline_->ReleaseBuffer(buffer);
   return true;
+}
+
+void FlirGige::CacheParams() {
+  int64_t width, height;
+  param_array_->GetIntegerValue("Width", width);
+  param_array_->GetIntegerValue("Height", height);
+
+  int64_t bit;
+  param_array_->GetEnumValue("DigitalOutput", bit);
+
+  int64_t R;
+  double F, B, O;
+  param_array_->GetIntegerValue("R", R);
+  param_array_->GetFloatValue("F", F);
+  param_array_->GetFloatValue("B", B);
+  param_array_->GetFloatValue("O", O);
+
+  cache_.B = B;
+  cache_.F = F;
+  cache_.O = O;
+  cache_.R = R;
+  cache_.height = height;
+  cache_.width = width;
+  cache_.bit = bit;
 }
 
 bool FlirGige::GrabTemprature(sensor_msgs::Temperature &temp_msg) {

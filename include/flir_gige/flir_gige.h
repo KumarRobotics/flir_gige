@@ -61,6 +61,7 @@ class FlirGige {
   void OpenStream();
   void ConfigureStream();
   void CreatePipeline();
+  void CacheParams();
 
   void SetAoi(int *width, int *height) const;
   void SetPixelFormat(bool raw) const;
@@ -75,6 +76,12 @@ class FlirGige {
   PvStreamPtr stream_;
   PvPipelinePtr pipeline_;
   PvGenParameterArray *param_array_;
+  struct {
+    int height;
+    int width;
+    double B, F, O, R;
+    int bit;
+  } cache_;
 };
 
 }  // namespace flir_gige
