@@ -46,7 +46,8 @@ sudo ln -s x86_64/libudev.so libudev.so.0
 Running the node is easy. Just do
 
 ```
-roslaunch flir_gige node.launch <ip_address:=xxx.xxx.xxx.xxx> <fps:=20> <bit:=2> <color:=false>
+roslaunch flir_gige node.launch <ip_address:=xxx.xxx.xxx.xxx> 
+<fps:=20>  <raw:=false>
 ```
 
 Notice that the `bit` option specifies whether to receive 8 bit or 14 bit data.  
