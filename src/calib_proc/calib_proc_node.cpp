@@ -36,39 +36,55 @@ void CalibProcNode::ConfigCb(CalibProcDynConfig &config, int level) {
   if (!(config.thresh_window % 2)) {
     config.thresh_window += 1;
   }
+  if (config.min_area > config.max_area) {
+    config.max_area = config.min_area + 1;
+  }
   config_ = config;
 }
 
 void CalibProcNode::ImageCb(const sensor_msgs::ImageConstPtr &image_msg) {
   cv::Mat image = cv_bridge::toCvCopy(image_msg, image_msg->encoding)->image;
-  //  cv::imshow("image", image);
 
   cv::Mat inverted;
   cv::bitwise_not(image, inverted);
-  //  cv::imshow("inverted", inverted);
 
-  /*
+  // Threshold
   cv::Mat thresh;
   cv::adaptiveThreshold(image, thresh, 255, config_.thresh_type,
                         cv::THRESH_BINARY, config_.thresh_window, 0);
   cv::imshow("thresh", thresh);
-  */
 
-  /*
-   std::vector<std::vector<cv::Point>> contours;
-   cv::findContours(raw, contours, CV_RETR_EXTERNAL, CV_CHAIN_APPROX_NONE);
+  // Gaussian blur
+  cv::Mat gauss;
+  cv::GaussianBlur(thresh, gauss, cv::Size(), config_.sigma, config_.sigma,
+                   cv::BORDER_DEFAULT);
+  cv::imshow("gauss", gauss);
 
-   cv::Mat contour_image;
-   cv::cvtColor(raw, contour_image, CV_GRAY2BGR);
-   for (size_t i = 0; i < contours.size(); ++i) {
-     cv::drawContours(contour_image, contours, i, cv::Scalar(255, 0, 0), 2, 8);
-   }
-   cv::imshow("contour", contour_image);
-   */
+  // Erosion
+  cv::Mat eroded;
+  int erosion_size = config_.erosion_size;
+  cv::Mat element = cv::getStructuringElement(
+      cv::MORPH_RECT, cv::Size(2 * erosion_size + 1, 2 * erosion_size + 1),
+      cv::Point(erosion_size, erosion_size));
+  cv::erode(thresh, eroded, element);
+  cv::imshow("erosion", eroded);
 
-  // Detect circles grid
+  // Contour
+  std::vector<std::vector<cv::Point>> contours;
+  cv::findContours(eroded, contours, CV_RETR_EXTERNAL, CV_CHAIN_APPROX_NONE);
+
+  cv::Mat ctr_image;
+  cv::cvtColor(image, ctr_image, CV_GRAY2BGR);
+  for (size_t i = 0; i < contours.size(); ++i) {
+    double area = cv::contourArea(contours[i]);
+    if (area > config_.min_area && area < config_.max_area) {
+      cv::drawContours(ctr_image, contours, i, cv::Scalar(255, 0, 0), 2, 8);
+    }
+  }
+  cv::imshow("contour", ctr_image);
+
   cv::Mat display;
-  DetectAndDrawCriclesGrid(inverted, cv::Size(4, 5), display);
+  DetectAndDrawCriclesGrid(inverted, cv::Size(5, 4), display);
 
   cv::Mat calib(inverted);
 

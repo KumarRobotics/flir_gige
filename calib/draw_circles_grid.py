@@ -5,7 +5,7 @@ import matplotlib.pyplot as plt
 fig = plt.gcf()
 n_cols = 5
 n_rows = 4
-r = 0.2
+r = 0.1
 for x in range(0, n_cols):
     for y in range(0, n_rows):
         circle = plt.Circle((x, y), r, color='k')
