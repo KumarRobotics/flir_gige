@@ -22,6 +22,7 @@ find_package(OpenCV)
 generate_dynamic_reconfigure_options(
     cfg/FlirGigeDyn.cfg
     cfg/ThermalProcDyn.cfg
+    cfg/CalibProcDyn.cfg
     )
 
 catkin_package(
@@ -46,6 +47,7 @@ add_library(${PROJECT_NAME}
     src/flir_gige/flir_gige_nodelet.cpp
     src/thermal_proc/thermal_proc_node.cpp
     src/thermal_proc/thermal_proc_nodelet.cpp
+    src/calib_proc/calib_proc_node.cpp
     )
 target_link_libraries(${PROJECT_NAME}
     ${catkin_LIBRARIES}
@@ -64,6 +66,12 @@ add_executable(thermal_proc_node
     src/thermal_proc/thermal_proc_main.cpp
     )
 target_link_libraries(thermal_proc_node
+    ${PROJECT_NAME}
+    )
+add_executable(calib_proc_node
+    src/calib_proc/calib_proc_main.cpp
+    )
+target_link_libraries(calib_proc_node
     ${PROJECT_NAME}
     )
 

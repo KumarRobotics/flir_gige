@@ -9,7 +9,7 @@ namespace flir_gige {
 
 ThermalProcNode::ThermalProcNode(const ros::NodeHandle &nh,
                                  const ros::NodeHandle &pnh)
-    : nh_(nh), it_(nh), cfg_server_(pnh) {
+    : nh_(nh), pnh_(pnh), it_(nh), cfg_server_(pnh) {
   image_transport::SubscriberStatusCallback connect_cb =
       boost::bind(&ThermalProcNode::ConnectCb, this);
   pub_proc_ = it_.advertise("image_proc", 1, connect_cb, connect_cb);
