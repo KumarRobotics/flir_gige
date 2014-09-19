@@ -15,15 +15,18 @@
     <arg name="view" default="false"/>
 
     <!-- Standalone -->
-    <arg unless="$(arg plugin)" name="option"
-        value="standalone flir_gige/FlirGigeNodelet"/>
+    <arg unless="$(arg plugin)"
+        name="option" value="standalone flir_gige/FlirGigeNodelet"/>
 
     <!-- Manager -->
-    <arg if="$(arg plugin)" name="manager" default="flir_gige_nodelet"/>
-    <arg if="$(arg plugin)" name="option"
+    <arg if="$(arg plugin)"
+        name="manager" default="flir_gige_nodelet"/>
+    <arg if="$(arg plugin)"
+        name="option"
         value="load flir_gige/FlirGigeNodelet $(arg manager)"/>
-    <node if="$(arg plugin)" pkg="nodelet" type="nodelet"
-        name="$(arg manager)" args="manager" output="$(arg output)">
+    <node if="$(arg plugin)"
+        pkg="nodelet" type="nodelet" name="$(arg manager)" args="manager"
+        output="$(arg output)">
     </node>
 
     <!-- Nodelet -->
@@ -40,7 +43,7 @@
     <!-- View -->
     <arg name="image" default="raw"/>
     <node if="$(arg view)" pkg="image_view" type="image_view"
-        name="$(arg camera)_$(arg view)" output="$(arg output)"
-        args="image:=/$(arg camera)/image_$(arg image)">
+        name="viewer" output="$(arg output)" ns="$(arg camera)"
+        args="image:=image_$(arg image)">
     </node>
 </launch>

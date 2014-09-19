@@ -11,10 +11,10 @@
     <!-- Node Settings -->
     <arg name="output" default="screen"/>
     <arg name="respawn" default="false"/>
-    <arg name="thermal_proc" default="false"/>
     <arg name="view" default="false"/>
     <arg name="calib" default="false"/>
     <arg name="calib_proc" default="false"/>
+    <arg name="thermal_proc" default="false"/>
 
     <!-- Node -->
     <node pkg="flir_gige" type="flir_gige_node" name="$(arg camera)"
@@ -29,14 +29,16 @@
 
     <!-- View -->
     <arg name="image" default="raw"/>
-    <node if="$(arg view)" pkg="image_view" type="image_view"
-        name="$(arg camera)_$(arg view)" output="$(arg output)"
-        args="image:=/$(arg camera)/image_$(arg image)">
+    <node if="$(arg view)"
+        pkg="image_view" type="image_view" name="viewer"
+        output="$(arg output)" ns="$(arg camera)"
+        args="image:=image_$(arg image)">
     </node>
 
     <!--Calib proc-->
-    <node if="$(arg calib_proc)" pkg="flir_gige" type="calib_proc_node"
-        name="calib_proc" ns="$(arg camera)">
+    <node if="$(arg calib_proc)"
+        pkg="flir_gige" type="calib_proc_node" name="calib_proc"
+        ns="$(arg camera)">
     </node>
 
     <!-- Calib -->
