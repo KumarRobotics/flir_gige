@@ -47,51 +47,53 @@ void CalibProcNode::ImageCb(const sensor_msgs::ImageConstPtr &image_msg) {
 
   cv::Mat inverted;
   cv::bitwise_not(image, inverted);
+  /*
+    // Threshold
+    cv::Mat thresh;
+    cv::adaptiveThreshold(image, thresh, 255, config_.thresh_type,
+                          cv::THRESH_BINARY, config_.thresh_window, 0);
+    cv::imshow("thresh", thresh);
 
-  // Threshold
-  cv::Mat thresh;
-  cv::adaptiveThreshold(image, thresh, 255, config_.thresh_type,
-                        cv::THRESH_BINARY, config_.thresh_window, 0);
-  cv::imshow("thresh", thresh);
+    // Gaussian blur
+    cv::Mat gauss;
+    cv::GaussianBlur(thresh, gauss, cv::Size(), config_.sigma, config_.sigma,
+                     cv::BORDER_DEFAULT);
+    cv::imshow("gauss", gauss);
 
-  // Gaussian blur
-  cv::Mat gauss;
-  cv::GaussianBlur(thresh, gauss, cv::Size(), config_.sigma, config_.sigma,
-                   cv::BORDER_DEFAULT);
-  cv::imshow("gauss", gauss);
+    // Erosion
+    cv::Mat eroded;
+    int erosion_size = config_.erosion_size;
+    cv::Mat element = cv::getStructuringElement(
+        cv::MORPH_RECT, cv::Size(2 * erosion_size + 1, 2 * erosion_size + 1),
+        cv::Point(erosion_size, erosion_size));
+    cv::erode(thresh, eroded, element);
+    cv::imshow("erosion", eroded);
 
-  // Erosion
-  cv::Mat eroded;
-  int erosion_size = config_.erosion_size;
-  cv::Mat element = cv::getStructuringElement(
-      cv::MORPH_RECT, cv::Size(2 * erosion_size + 1, 2 * erosion_size + 1),
-      cv::Point(erosion_size, erosion_size));
-  cv::erode(thresh, eroded, element);
-  cv::imshow("erosion", eroded);
+    // Contour
+    std::vector<std::vector<cv::Point>> contours;
+    cv::findContours(eroded, contours, CV_RETR_EXTERNAL, CV_CHAIN_APPROX_NONE);
 
-  // Contour
-  std::vector<std::vector<cv::Point>> contours;
-  cv::findContours(eroded, contours, CV_RETR_EXTERNAL, CV_CHAIN_APPROX_NONE);
-
-  cv::Mat ctr_image;
-  cv::cvtColor(image, ctr_image, CV_GRAY2BGR);
-  for (size_t i = 0; i < contours.size(); ++i) {
-    double area = cv::contourArea(contours[i]);
-    if (area > config_.min_area && area < config_.max_area) {
-      cv::drawContours(ctr_image, contours, i, cv::Scalar(255, 0, 0), 2, 8);
+    cv::Mat ctr_image;
+    cv::cvtColor(image, ctr_image, CV_GRAY2BGR);
+    for (size_t i = 0; i < contours.size(); ++i) {
+      double area = cv::contourArea(contours[i]);
+      if (area > config_.min_area && area < config_.max_area) {
+        cv::drawContours(ctr_image, contours, i, cv::Scalar(255, 0, 0), 2, 8);
+      }
     }
-  }
-  cv::imshow("contour", ctr_image);
+    cv::imshow("contour", ctr_image);
+    */
 
-  cv::Mat display;
-  DetectAndDrawCriclesGrid(inverted, cv::Size(5, 4), display);
-
-  cv::Mat calib(inverted);
+  //  cv::Mat display;
+  //  DetectAndDrawCriclesGrid(
+  //      inverted, cv::Size(config_.circles_per_row, config_.circles_per_col),
+  //      display);
 
   // Display
-  cv::imshow("display", display);
-  cv::waitKey(1);
+  //  cv::imshow("display", display);
+  //  cv::waitKey(1);
 
+  cv::Mat calib(inverted);
   // Publish processed image
   cv_bridge::CvImage cvimg_calib(image_msg->header, image_msg->encoding, calib);
   pub_calib_.publish(cvimg_calib.toImageMsg());
