@@ -4,8 +4,10 @@
     <arg name="test" default="false"/>
     <arg name="bag" default="/media/chao/Seagate/bag/pennstate/scab/2014-09-05-13-47-08.bag"/>
     <arg name="output" default="screen"/>
-    <arg name="proc" default="false"/>
     <arg name="view" default="false"/>
+
+    <arg name="celcius_min" default="10"/>
+    <arg name="celcius_max" default="30"/>
 
     <!--Bagfile-->
     <node if="$(arg test)" pkg="rosbag" type="play" name="player"
@@ -15,12 +17,14 @@
     <!-- Thermal Proc -->
     <node pkg="flir_gige" type="thermal_proc_node"
         name="thermal_proc" ns="$(arg camera)" output="$(arg output)">
+        <param name="celcius_min" type="double" value="$(arg celcius_min)"/>
+        <param name="celcius_max" type="double" value="$(arg celcius_max)"/>
     </node>
 
     <!-- View -->
-    <arg name="image" default="proc"/>
-    <node if="$(arg view)" pkg="image_view" type="image_view"
-        name="$(arg camera)_$(arg view)" output="$(arg output)"
-        args="image:=/$(arg camera)/image_$(arg image)">
+    <arg name="image" default="image_proc"/>
+    <node if="$(arg view)"
+        pkg="image_view" type="image_view" name="proc_viewer"
+        output="$(arg output)" ns="$(arg camera)" args="image:=$(arg image)">
     </node>
 </launch>
