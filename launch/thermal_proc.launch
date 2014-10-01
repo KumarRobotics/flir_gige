@@ -6,8 +6,8 @@
     <arg name="output" default="screen"/>
     <arg name="view" default="false"/>
 
-    <arg name="celcius_min" default="10"/>
-    <arg name="celcius_max" default="30"/>
+    <arg name="celsius_min" default="10"/>
+    <arg name="celsius_max" default="30"/>
 
     <!--Bagfile-->
     <node if="$(arg test)" pkg="rosbag" type="play" name="player"
@@ -17,8 +17,8 @@
     <!-- Thermal Proc -->
     <node pkg="flir_gige" type="thermal_proc_node"
         name="thermal_proc" ns="$(arg camera)" output="$(arg output)">
-        <param name="celcius_min" type="double" value="$(arg celcius_min)"/>
-        <param name="celcius_max" type="double" value="$(arg celcius_max)"/>
+        <param name="celsius_min" type="double" value="$(arg celsius_min)"/>
+        <param name="celsius_max" type="double" value="$(arg celsius_max)"/>
     </node>
 
     <!-- View -->
