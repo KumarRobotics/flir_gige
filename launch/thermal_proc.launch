@@ -1,8 +1,8 @@
 <launch>
     <!--Node Settings-->
-    <arg name="camera" default="flir_gige"/>
+    <arg name="camera" default="thermal"/>
     <arg name="test" default="false"/>
-    <arg name="bag" default="/media/chao/Seagate/bag/pennstate/scab/2014-09-05-13-47-08.bag"/>
+    <arg name="bag"/>
     <arg name="output" default="screen"/>
     <arg name="view" default="false"/>
 
@@ -10,8 +10,7 @@
     <arg name="celsius_max" default="30"/>
 
     <!--Bagfile-->
-    <node if="$(arg test)" pkg="rosbag" type="play" name="player"
-        args="$(arg bag)">
+    <node if="$(arg test)" pkg="rosbag" type="play" name="player" args="$(arg bag)">
     </node>
 
     <!-- Thermal Proc -->

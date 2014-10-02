@@ -1,11 +1,15 @@
 <launch>
+    <!-- Common Interface -->
+    <arg name="device" default="192.168.1.11"/>
+    <arg name="rate" default="20"/>
+
     <!-- Camera Settings -->
-    <arg name="ip_address" default="192.168.1.11"/>
-    <arg name="frame_id" default="flir_gige"/>
-    <arg name="camera" default="flir_gige"/>
-    <arg name="calib_url"
-        default="package://flir_gige/calib/calib_$(arg camera).yml"/>
-    <arg name="fps" default="20.0"/>
+    <arg name="ip_address" default="$(arg device)"/>
+    <arg name="camera_name" default="flir_ax5"/>
+    <arg name="camera" default="thermal"/>
+    <arg name="frame_id" default="$(arg camera)"/>
+    <arg name="calib_url" default="package://flir_gige/calib/calib_$(arg camera).yml"/>
+    <arg name="fps" default="$(arg rate)"/>
     <arg name="raw" default="false"/>
 
     <!-- Node Settings -->
@@ -33,8 +37,8 @@
     <node pkg="nodelet" type="nodelet" name="$(arg camera)"
         output="$(arg output)" args="$(arg option)">
         <param name="identifier" type="string" value="$(arg ip_address)"/>
+        <param name="camera_name" type="string" value="$(arg camera_name)"/>
         <param name="frame_id" type="string" value="$(arg frame_id)"/>
-        <param name="camera" type="string" value="$(arg camera)"/>
         <param name="calib_url" type="string" value="$(arg calib_url)"/>
         <param name="fps" type="double" value="$(arg fps)"/>
         <param name="raw" type="bool" value="$(arg raw)"/>
