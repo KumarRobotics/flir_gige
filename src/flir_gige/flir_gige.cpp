@@ -60,6 +60,8 @@ void FlirGige::StopAcquisition() {
 
 void FlirGige::Configure(FlirGigeDynConfig &config) {
   SetPixelFormat(config.raw);
+  SetNucMode(config.nuc_mode);
+  DoNuc(config.nuc_action);
 }
 
 FlirGige::PvDeviceInfoGEVVec FlirGige::GatherGevDevice() const {
@@ -290,6 +292,17 @@ void FlirGige::SetPixelFormat(bool raw) const {
   } else {
     param_array_->SetEnumValue("PixelFormat", PvPixelMono8);
     param_array_->SetEnumValue("DigitalOutput", static_cast<int64_t>(2));
+  }
+}
+
+void FlirGige::SetNucMode(int nuc) const {
+  param_array_->SetEnumValue("NUCMode", static_cast<int64_t>(nuc));
+}
+
+void FlirGige::DoNuc(bool &nuc) const {
+  if (nuc) {
+    param_array_->ExecuteCommand("NUCAction");
+    nuc = false;
   }
 }
 
