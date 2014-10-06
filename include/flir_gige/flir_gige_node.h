@@ -7,7 +7,7 @@
 
 namespace flir_gige {
 
-class FlirGigeNode : public CameraNodeBase<FlirGigeDynConfig> {
+class FlirGigeNode : public camera_base::CameraNodeBase<FlirGigeDynConfig> {
  public:
   FlirGigeNode(const ros::NodeHandle &nh)
       : CameraNodeBase(nh), flir_gige_ros_(nh) {}

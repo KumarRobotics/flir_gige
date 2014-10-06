@@ -8,7 +8,7 @@
 
 namespace flir_gige {
 
-class FlirGigeRos : public CameraRosBase {
+class FlirGigeRos : public camera_base::CameraRosBase {
  public:
   FlirGigeRos(const ros::NodeHandle& nh)
       : CameraRosBase(nh),
