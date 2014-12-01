@@ -8,7 +8,7 @@ add_definitions(-std=c++11 -Wall -Wno-unknown-pragmas)
 if(CMAKE_SIZEOF_VOID_P EQUAL 8)
     # Make CMake aware of the cmake folder for local FindXXX scripts.
     set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} ${CMAKE_CURRENT_SOURCE_DIR}/cmake)
-    find_package(ebus REQUIRED)
+    find_package(Ebus REQUIRED)
 else()
     message(FATAL_ERROR "This package only supports 64-bit linux")
 endif()
@@ -35,7 +35,7 @@ catkin_package(
 include_directories(
     include
     ${catkin_INCLUDE_DIRS}
-    ${EBUS_INCLUDE_DIRS}
+    ${Ebus_INCLUDE_DIRS}
     ${OpenCV_INCLUDE_DIRS}
     )
 
@@ -52,7 +52,7 @@ add_library(${PROJECT_NAME}
 target_link_libraries(${PROJECT_NAME}
     ${catkin_LIBRARIES}
     ${OpenCV_LIBRARIES}
-    ${EBUS_LIBRARIES}
+    ${Ebus_LIBRARIES}
     )
 
 # node
