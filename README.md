@@ -1,5 +1,5 @@
 # flir_gige
-A ros driver for FLIR ax5 thermal camera using Pleora eBus SDK 4.0.5
+A ros driver for FLIR ax5 thermal camera using Pleora eBus SDK 4.0.5+
 
 ![image](http://www.flir.com/uploadedImages/Thermography_USA/Industries/ATS/Products/Ax5_Series_Kits/FLIR-A-Series-Thumbnail.png)
 
