@@ -44,7 +44,9 @@ sudo ln -s x86_64/libudev.so libudev.so.0
 ```
 
 ## Running the node
-Running the node is easy. Just do
+You need to first source the `set_puregev_gen` file in `install`.
+
+Then just do
 
 ```
 roslaunch flir_gige node.launch <ip_address:=xxx.xxx.xxx.xxx> 
